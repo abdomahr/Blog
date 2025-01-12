@@ -1,10 +1,10 @@
 <?php
 
-namespace VendorName\Skeleton\Tests;
+namespace BlogLaravel\Blog\Tests;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use VendorName\Skeleton\SkeletonServiceProvider;
+use BlogLaravel\Blog\BlogServiceProvider;
 
 class TestCase extends Orchestra
 {
@@ -12,26 +12,51 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
+        // Set up factory names if needed
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'VendorName\\Skeleton\\Database\\Factories\\'.class_basename($modelName).'Factory'
+            fn (string $modelName) => 'BlogLaravel\\Blog\\Database\\Factories\\'.class_basename($modelName).'Factory'
         );
+
+        // Ensure database migrations are run for testing environment
+        $this->runMigrations();
     }
 
     protected function getPackageProviders($app)
     {
         return [
-            SkeletonServiceProvider::class,
+            BlogServiceProvider::class,
         ];
     }
 
-    public function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app)
     {
-        config()->set('database.default', 'testing');
+        // Set up testing database configuration
+        $app['config']->set('database.default', 'testing');
 
-        /*
-         foreach (\Illuminate\Support\Facades\File::allFiles(__DIR__ . '/database/migrations') as $migration) {
-            (include $migration->getRealPath())->up();
-         }
-         */
+        $app['config']->set('database.connections.testing', [
+            'driver' => 'mysql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '3306'),
+            'database' => 'blog', 
+            'username' => env('DB_USERNAME', 'root'), 
+            'password' => 'ramos',
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ]);
+    }
+
+    /**
+     * Run migrations for the testing environment.
+     *
+     * @return void
+     */
+    private function runMigrations()
+    {
+        // Run migrations for the testing database connection
+        $this->artisan('migrate', ['--database' => 'testing'])->run();
     }
 }
